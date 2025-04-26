@@ -1,0 +1,63 @@
+model:
+  base_learning_rate: 5e-8
+  target: taming1.models.FEANET.FEANET
+  params:
+    checkpoint_source: logs/vqgan_imagenet_f16_1024.ckpt
+    checkpoint_ref: logs/vqgan6/checkpoints/last.ckpt
+    emotion_class: 6
+    embed_dim: 256
+    n_embed: 1024
+    use_residual: True
+    ddconfig:
+      double_z: False
+      z_channels: 256
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [1,1,2,2,4]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: [16]
+      dropout: 0.0
+
+    lossconfig:
+      target: taming1.modules.losses.vqperceptual_ref.VQLPIPS_Ref
+      params:
+        disc_ndf: 64
+        disc_num_layers: 0
+        disc_conditional: False
+        disc_in_channels: 256
+        disc_start: 0
+        disc_weight: 1.0
+        disc_factor: 0.8
+        codebook1_weight: 10.0
+        codebook2_weight: 10.0
+        reverse_weight: 50.0
+        style_weight: 1000.0
+        G_step: 1
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 8
+    num_workers: 1
+    train:
+      target: taming1.data.unpaired_image.UnpairedImageTrain
+      params:
+
+        folder1: datasets/Emotion6/comb6 # ref
+        folder2: datasets/Emotion6/comb6 
+
+        size: 256
+    validation:
+      target: taming1.data.unpaired_image.UnpairedImageVal
+      params:
+        folder1: datasets/Emotion6/comb6
+        folder2: datasets/Emotion6/comb6
+        size: 256
+    test:
+      target: taming1.data.unpaired_image.UnpairedImageTest
+      params:
+        folder1: datasets/Emotion6/comb6
+        folder2: datasets/Emotion6/comb6
+        size: 256
